@@ -2,7 +2,7 @@ name: GitHub Action NPM Test & Release
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   Check-And-Resease:
     runs-on: ubuntu-latest
