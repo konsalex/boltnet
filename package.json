@@ -1,0 +1,44 @@
+{
+  "name": "boltnet",
+  "version": "0.0.1",
+  "description": "(Unofficial) Node Cluster Management for Neo4j",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "dev": "ts-node src/index.ts",
+    "fix": "gts fix",
+    "prepare": "yarn run compile",
+    "pretest": "yarn run compile",
+    "posttest": "yarn run lint"
+  },
+  "type": "commonjs",
+  "keywords": [
+    "neo4j",
+    "cluster",
+    "bolt",
+    "docker"
+  ],
+  "bin": {
+    "boltnet": "./build/src/index.js"
+  },
+  "author": "Costa Alexoglou @CostasAlexoglou",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/dockerode": "^3.2.3",
+    "@types/node": "^14.11.2",
+    "@types/yargs": "^17.0.0",
+    "gts": "^3.1.0",
+    "ts-node": "^10.0.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "chalk": "^4.1.1",
+    "dockerode": "^3.3.0",
+    "ora": "^5.4.1",
+    "yargs": "^17.0.1"
+  }
+}
