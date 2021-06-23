@@ -50,7 +50,7 @@
     "url": "https://github.com/konsalex/boltnet.git"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "config": {
     "commitizen": {
