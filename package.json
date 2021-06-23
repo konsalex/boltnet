@@ -1,9 +1,9 @@
 {
   "name": "boltnet",
-  "version": "0.0.1",
+  "version": "0.0.0-development",
   "description": "(Unofficial) Node Cluster Management for Neo4j",
-  "main": "index.js",
   "scripts": {
+    "commit": "git-cz",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "gts lint",
     "clean": "gts clean",
@@ -12,7 +12,8 @@
     "fix": "gts fix",
     "prepare": "yarn run compile",
     "pretest": "yarn run compile",
-    "posttest": "yarn run lint"
+    "posttest": "yarn run lint",
+    "semantic-release": "semantic-release --no-ci --dry-run"
   },
   "type": "commonjs",
   "keywords": [
@@ -30,7 +31,9 @@
     "@types/dockerode": "^3.2.3",
     "@types/node": "^14.11.2",
     "@types/yargs": "^17.0.0",
+    "cz-adapter-eslint": "^0.3.0",
     "gts": "^3.1.0",
+    "semantic-release": "^17.4.4",
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.3.4"
@@ -40,5 +43,54 @@
     "dockerode": "^3.3.0",
     "ora": "^5.4.1",
     "yargs": "^17.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/konsalex/boltnet.git"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-adapter-eslint"
+    }
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "eslint",
+          "releaseRules": [
+            {
+              "type": "docs",
+              "scope": "README",
+              "release": "patch"
+            },
+            {
+              "type": "refactor",
+              "release": "patch"
+            },
+            {
+              "type": "style",
+              "release": "patch"
+            }
+          ],
+          "parserOpts": {
+            "noteKeywords": [
+              "BREAKING CHANGE",
+              "BREAKING CHANGES"
+            ]
+          }
+        }
+      ],
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
   }
 }

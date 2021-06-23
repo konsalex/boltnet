@@ -1,0 +1,29 @@
+name: GitHub Action NPM Test & Release
+on:
+  push:
+    branches:
+      - master
+jobs:
+  Check-And-Resease:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🏃‍♂️ The job started."
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - name: List files in the repository
+        run: |
+          chmod +x ${{ github.workspace }}/.github/workflows/check_yarn.sh
+          # Run bash script
+          "${{ github.workspace }}/.github/workflows/check_yarn.sh"
+      - name: Install dependencies & Compile
+        run: |
+          yarn install
+          yarn compile
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release --no-ci --dry
