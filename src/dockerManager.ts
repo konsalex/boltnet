@@ -82,7 +82,7 @@ class DockerManager {
         if (
           containerInfo.Names.filter(containerName =>
             new RegExp(/boltnet-/).test(containerName)
-          )
+          ).length > 0
         ) {
           console.log(
             chalk.green(`Removing Container ID: ${containerInfo.Id}`)
