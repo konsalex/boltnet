@@ -132,12 +132,51 @@ class DockerManager {
     }
   }
 
+  /**
+   * Checks image local availability
+   * If image does not exist, downloads it
+   */
+  public async checkImage() {
+    DockerManager.startSpinner('Checking image local availability');
+    try {
+      const images = await DockerManager.dockerDriver.listImages();
+      DockerManager.successSpinner();
+
+      if (!images.some(i => i.RepoTags.includes(this.imageName))) {
+        DockerManager.startSpinner('Downloading New image');
+
+        let downloading = true;
+
+        await DockerManager.dockerDriver.pull(
+          this.imageName,
+          (error: string | null, stream: NodeJS.ReadableStream) => {
+            if (error) DockerManager.fatalFail(error);
+
+            const onFinished = () => {
+              //  Ended Download
+              downloading = false;
+            };
+            DockerManager.dockerDriver.modem.followProgress(stream, onFinished);
+          }
+        );
+
+        /** Check if download have finished every half a second */
+        while (true) {
+          if (!downloading) break;
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        DockerManager.successSpinner();
+      }
+    } catch (e) {
+      DockerManager.fatalFail(e);
+    }
+  }
+
   /** Create and run containers */
   public async runContainers() {
     await this.pingDocker();
 
-    DockerManager.spinner.text = 'Starting Cluster Members';
-    DockerManager.spinner.start();
+    DockerManager.startSpinner('Starting Cluster Members');
 
     /**  Create Cluster members */
     for (let i = 0, l = this.coreClusters + this.readReplicas; i < l; i += 1) {
@@ -166,10 +205,14 @@ class DockerManager {
           host: this.basePorts,
         },
       });
-      const container = await DockerManager.dockerDriver.createContainer(
-        options
-      );
-      await container.start();
+      try {
+        const container = await DockerManager.dockerDriver.createContainer(
+          options
+        );
+        await container.start();
+      } catch (e) {
+        DockerManager.fatalFail(e);
+      }
     }
     DockerManager.spinner.succeed();
   }

@@ -11,6 +11,7 @@ console.log(chalk.yellow(STARTUP_MESSAGE));
 
 async function createCluster(manager: DockerManager) {
   await manager.pingDocker();
+  await manager.checkImage();
   await manager.createNetwork();
   await manager.runContainers();
 }
@@ -52,12 +53,6 @@ const argv = yargs(hideBin(process.argv))
   .option('p', {
     alias: 'user-password',
     description: 'Set password for the authentication',
-    type: 'string',
-    default: 'newpassword',
-  })
-  .option('', {
-    alias: 'user-name',
-    description: 'Set username for the authentication',
     type: 'string',
     default: 'newpassword',
   })
