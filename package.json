@@ -1,6 +1,6 @@
 {
   "name": "boltnet",
-  "version": "0.0.0-development",
+  "version": "1.1.1",
   "description": "(Unofficial) Node Cluster Management for Neo4j",
   "scripts": {
     "commit": "git-cz",
