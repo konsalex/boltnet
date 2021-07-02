@@ -2,6 +2,7 @@
 /* eslint-disable no-process-exit */
 import {NEO4j_DEFAULT_DOCKER_TAG, STARTUP_MESSAGE} from './utils/constants';
 import {assertPromise} from './utils/typeGuarding';
+import {greenMessage} from './utils/styling';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import chalk from 'chalk';
@@ -9,11 +10,24 @@ import DockerManager from './dockerManager';
 
 console.log(chalk.yellow(STARTUP_MESSAGE));
 
-async function createCluster(manager: DockerManager) {
+async function createContainer(manager: DockerManager) {
   await manager.pingDocker();
   await manager.checkImage();
-  await manager.createNetwork();
-  await manager.runContainers();
+
+  switch (manager.type) {
+    case 'CLUSTER': {
+      /** We need a bridge network only for cluster topologies */
+      await manager.createNetwork();
+      await manager.runCluster();
+      break;
+    }
+    case 'SINGLE': {
+      await manager.runSingle();
+      break;
+    }
+    default:
+      throw new Error('Wrong type is provided');
+  }
 }
 
 const argv = yargs(hideBin(process.argv))
@@ -56,6 +70,12 @@ const argv = yargs(hideBin(process.argv))
     type: 'string',
     default: 'newpassword',
   })
+  .option('s', {
+    alias: 'single-instance',
+    description: 'Create a single instance',
+    type: 'boolean',
+    default: false,
+  })
   .option('i', {
     alias: 'image',
     nargs: 1,
@@ -69,7 +89,7 @@ const argv = yargs(hideBin(process.argv))
 /** Typeguard to be sure that argv is not a promise */
 assertPromise(!(argv instanceof Promise));
 
-const {prune, c, i, r, x, p, u} = argv;
+const {prune, c, i, r, x, p, u, s} = argv;
 
 switch (true) {
   case prune:
@@ -78,12 +98,21 @@ switch (true) {
   case x:
     DockerManager.cleanBoltnetContainers();
     break;
+  case s: {
+    greenMessage(`Creating a single instance with Neo4j Image ${i}`);
+    const manager = new DockerManager({
+      password: p,
+      username: u,
+      type: 'SINGLE',
+      imageName: i,
+    });
+    createContainer(manager);
+    break;
+  }
   /** Check if cluster flag was provided  */
   case process.argv.some(r => ['-c', '--cluster'].includes(r)): {
-    console.log(
-      chalk.black.bgGreen(
-        `Creating cluster with: ${c} Core members and ${r} Read Replicas with Neo4j Image ${i}`
-      )
+    greenMessage(
+      `Creating cluster with: ${c} Core members and ${r} Read Replicas with Neo4j Image ${i}`
     );
     const manager = new DockerManager({
       coreClusters: c,
@@ -91,8 +120,9 @@ switch (true) {
       readReplicas: r,
       password: p,
       username: u,
+      type: 'CLUSTER',
     });
-    createCluster(manager);
+    createContainer(manager);
     break;
   }
   default:
@@ -100,6 +130,6 @@ switch (true) {
     console.log(
       `No arguments are passed, if you cant to create a default cluster pass ${chalk.bgGray(
         '-c'
-      )} flag`
+      )} flag or create a single instance with ${chalk.bgGray('-s')} flag.`
     );
 }

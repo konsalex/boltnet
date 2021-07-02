@@ -1,10 +1,23 @@
 import {randomString} from './utils/helpers';
 import createMemberOptions from './utils/createMember';
+import createSingleOptions from './utils/createSingle';
 import chalk from 'chalk';
 import Dockerode from 'dockerode';
 import ora from 'ora';
 
+type DockerManagerConstructor = {
+  type: 'SINGLE' | 'CLUSTER';
+  coreClusters?: number;
+  readReplicas?: number;
+  imageName: string;
+  username: string;
+  password: string;
+};
+
 class DockerManager {
+  static dockerDriver = new Dockerode();
+  static spinner = ora();
+
   networkName: string | null;
   coreClusters: number;
   readReplicas: number;
@@ -13,34 +26,28 @@ class DockerManager {
   username: string;
   imageName: string;
   password: string;
+  type: 'SINGLE' | 'CLUSTER';
   basePorts: {
     BOLT: string;
     HTTP: string;
     HTTPS: string;
   };
 
-  static dockerDriver = new Dockerode();
-  static spinner = ora();
-
   constructor({
+    type,
     coreClusters,
     readReplicas,
     imageName,
     username,
     password,
-  }: {
-    coreClusters: number;
-    readReplicas: number;
-    imageName: string;
-    username: string;
-    password: string;
-  }) {
+  }: DockerManagerConstructor) {
     DockerManager.spinner.color = 'green';
+    this.type = type;
     this.networkName = null;
     this.username = username;
     this.password = password;
-    this.coreClusters = coreClusters;
-    this.readReplicas = readReplicas;
+    this.coreClusters = coreClusters || 0;
+    this.readReplicas = readReplicas || 0;
     this.imageName = `neo4j:${imageName}`;
     this.ignoreInput = true;
     this.baseName = `boltnet-${randomString(5)}`;
@@ -173,9 +180,7 @@ class DockerManager {
   }
 
   /** Create and run containers */
-  public async runContainers() {
-    await this.pingDocker();
-
+  public async runCluster() {
     DockerManager.startSpinner('Starting Cluster Members');
 
     /**  Create Cluster members */
@@ -215,6 +220,38 @@ class DockerManager {
       }
     }
     DockerManager.spinner.succeed();
+  }
+
+  /** Create and run containers */
+  public async runSingle() {
+    DockerManager.startSpinner('Starting Single Members');
+
+    const options = createSingleOptions({
+      baseName: this.baseName,
+      options: {
+        username: this.username,
+        password: this.password,
+        imageName: this.imageName,
+      },
+      ports: {
+        container: {
+          BOLT: this.basePorts.BOLT,
+          HTTP: this.basePorts.HTTP,
+          HTTPS: this.basePorts.HTTPS,
+        },
+        host: this.basePorts,
+      },
+    });
+
+    try {
+      const container = await DockerManager.dockerDriver.createContainer(
+        options
+      );
+      await container.start();
+      DockerManager.spinner.succeed();
+    } catch (e) {
+      DockerManager.fatalFail(e);
+    }
   }
 }
 
