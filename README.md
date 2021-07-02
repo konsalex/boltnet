@@ -40,6 +40,7 @@ yarn global add boltnet
 <!-- Usages -->
 
 - [🔘 Create Cluster](#create-cluster)
+- [⚛️ Create Single Instance](#create-single-instance)
 - [✂️ Prune Networks](#prune-networks)
 - [🏺 Detete Boltnet Containers](#detete-boltnet-containers)
 
@@ -78,6 +79,18 @@ boltnet -c
 # Create a cluster with custom settings
 # 4 Core members, 2 Read replicas, Username/Password: random/randompass , Neo4j Image: 4.0.1-enterprise
 boltnet -c 4 -r 2 -u random -p randompass -i 4.0.1-enterprise
+```
+
+## Create Single Instance
+
+```bash
+# Create a single instance with default settings
+# Username/Password: neo4j/newpassword , Neo4j Image: 4.3-enterprise
+boltnet -s
+
+# Create a single instance with custom settings
+# 4Username/Password: random/randompass , Neo4j Image: 4.0.1-enterprise
+boltnet -s -u random -p randompass -i 4.0.1-enterprise
 ```
 
 ## Prune Networks
