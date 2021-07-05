@@ -78,7 +78,7 @@ class DockerManager {
   static fatalFail(message: string) {
     DockerManager.failSpinner();
     this.errorMessage(message);
-    throw new Error(message);
+    process.exit(1);
   }
 
   /** Remove all the containers generated from boltnet */
